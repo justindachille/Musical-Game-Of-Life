@@ -412,7 +412,7 @@
                 <input type="range" id="resetSensitivity" min="1" max="5" value="3">
             </div>
             <div id="patternStatus">Pattern Status: Normal</div>
-            <button id="changeRootNote" class="off">Change Root Note on Reset: OFF</button>
+            <button id="changeRootNote" class="on">Change Root Note on Reset: ON</button>
         </div>
     </div>
 
@@ -432,6 +432,12 @@
         let filterNode = null;
         let compressorNode = null;
         let effectsChain = new Map();
+        let stereoNodes = new Map(); // For storing stereo panners
+
+        function calculatePan(column) {
+            const centerColumn = (GRID_SIZE - 1) / 2;
+            return (column - centerColumn) / centerColumn;
+        }
 
         // Audio Setup
         class SimpleReverb {
@@ -623,7 +629,7 @@
             filterNode.gain.setValueAtTime(filterGain, audioContext.currentTime);
         }
 
-        function playNote(row) {
+        function playNote(row, column) {
             if (!audioContext) initAudio();
 
             const scale = generateScale();
@@ -632,14 +638,22 @@
             const source = audioContext.createBufferSource();
             source.buffer = createToneBuffer(frequency, 0.2);
             
-            // Connect to effects chain
-            source.connect(reverbNode.input);
+            // Create stereo panner
+            const stereoPanner = audioContext.createStereoPanner();
+            const panValue = calculatePan(column);
+            stereoPanner.pan.setValueAtTime(panValue, audioContext.currentTime);
+            
+            // Connect through stereo panner
+            source.connect(stereoPanner);
+            stereoPanner.connect(reverbNode.input);
+            
             source.start();
             source.stop(audioContext.currentTime + 0.2);
 
             // Cleanup
             source.onended = () => {
                 source.disconnect();
+                stereoPanner.disconnect();
             };
         }
 
@@ -795,7 +809,7 @@
             return frequencies;
         }
 
-        let changeRootNote = false;
+        let changeRootNote = true;
 
         document.getElementById('changeRootNote').addEventListener('click', function() {
             changeRootNote = !changeRootNote;
@@ -830,7 +844,7 @@
         function toggleCell(i, j) {
             grid[i][j] = !grid[i][j];
             if (grid[i][j]) {
-                playNote(i);
+                playNote(i, j);
             }
             updateGridDisplay();
         }
@@ -859,7 +873,7 @@
                     }
                     newGrid[i][j] = neighbors === 3 || (grid[i][j] && neighbors === 2);
                     if (newGrid[i][j] && !grid[i][j]) {
-                        playNote(i);
+                        playNote(i, j);
                     }
                 }
             }
