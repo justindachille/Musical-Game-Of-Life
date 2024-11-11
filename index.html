@@ -45,6 +45,13 @@
             font-weight: 600;
         }
 
+        .disclaimer {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
         .slider-control {
             display: flex;
             flex-direction: column;
@@ -157,6 +164,68 @@
             font-size: 24px;
             text-align: center;
         }
+
+        #changeRootNote {
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+        }
+
+        #changeRootNote.off {
+            background-color: #f44336; /* Red */
+            color: white;
+        }
+
+        #changeRootNote.on {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+
+        .presets-container {
+            margin: 20px auto;
+            padding: 16px 24px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+
+        .presets-title {
+            margin: 0 0 12px 0;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 8px;
+        }
+
+        .preset-btn {
+            padding: 8px 12px;
+            border: 1px solid #2563eb;
+            border-radius: 6px;
+            background-color: white;
+            color: #2563eb;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .preset-btn:hover {
+            background-color: #2563eb15;
+        }
+
+        .preset-btn.active {
+            background-color: #2563eb;
+            color: white;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -217,12 +286,13 @@
 
     <!-- Main Content -->
     <div class="main-content">
+        <div class="disclaimer">Note: Audio works best without clipping in Safari</div>
         <h1>Musical Game of Life</h1>
         <div class="top-controls">
             <select id="rootNote">
                 <option value="C">C</option>
                 <option value="C#">C#</option>
-                <option value="D">D</option>
+                <option value="D" selected="selected">D</option>
                 <option value="D#">D#</option>
                 <option value="E">E</option>
                 <option value="F">F</option>
@@ -242,7 +312,7 @@
                 <option value="minor7">Minor 7 Chord</option>
                 <option value="dominant">Dominant 7 Chord</option>
                 <option value="pentatonicMajor">Major Pentatonic Scale</option>
-                <option value="pentatonicMinor">Minor Pentatonic Scale</option>
+                <option value="pentatonicMinor" selected="selected">Minor Pentatonic Scale</option>
                 <option value="blues">Blues Scale</option>
                 <option value="wholeTone">Whole Tone Scale</option>
                 <option value="diminished">Diminished Scale</option>
@@ -276,6 +346,17 @@
             <button id="clearButton">✕ Clear</button>
         </div>
         <div id="grid" class="grid"></div>
+        <div class="presets-container">
+            <div class="presets-title">SOUND PRESETS</div>
+            <div class="presets-grid">
+                <button class="preset-btn active" onclick="applyPreset('default')">Default</button>
+                <button class="preset-btn" onclick="applyPreset('ethereal')">Ethereal Pad</button>
+                <button class="preset-btn" onclick="applyPreset('shimmer')">Shimmer Dreams</button>
+                <button class="preset-btn" onclick="applyPreset('vintage')">Vintage Synth</button>
+                <button class="preset-btn" onclick="applyPreset('space')">Deep Space</button>
+                <button class="preset-btn" onclick="applyPreset('pluck')">Digital Pluck</button>
+            </div>
+        </div>
     </div>
 
     <!-- Right Controls Panel -->
@@ -331,6 +412,7 @@
                 <input type="range" id="resetSensitivity" min="1" max="5" value="3">
             </div>
             <div id="patternStatus">Pattern Status: Normal</div>
+            <button id="changeRootNote" class="off">Change Root Note on Reset: OFF</button>
         </div>
     </div>
 
@@ -713,6 +795,23 @@
             return frequencies;
         }
 
+        let changeRootNote = false;
+
+        document.getElementById('changeRootNote').addEventListener('click', function() {
+            changeRootNote = !changeRootNote;
+            const button = this;
+            if (changeRootNote) {
+                button.textContent = 'Change Root Note on Reset: ON';
+                button.classList.remove('off');
+                button.classList.add('on');
+            } else {
+                button.textContent = 'Change Root Note on Reset: OFF';
+                button.classList.remove('on');
+                button.classList.add('off');
+            }
+        });
+
+
         function initGrid() {
             const gridElement = document.getElementById('grid');
             gridElement.innerHTML = '';
@@ -783,6 +882,14 @@
             lastFiveStates = [];
             patternRepeatCount = 0;
             document.getElementById('patternStatus').textContent = 'Pattern Status: Normal';
+
+            if (changeRootNote) {
+                rootNote = document.getElementById('rootNote');
+                var items = rootNote.getElementsByTagName('option');
+                var index = Math.floor(Math.random() * items.length);
+    
+                rootNote.selectedIndex = index;
+            }
         }
 
         // Initialize the game
@@ -824,6 +931,126 @@
                 soundBuffers.clear();
             }
         });
+
+        const PRESETS = {
+            default: {
+                attack: 10,
+                decay: 50,
+                sustain: 70,
+                release: 100,
+                reverbDecay: 200,
+                reverbPredelay: 10,
+                reverbWet: 50,
+                delayTime: 150,
+                delayFeedback: 30,
+                delayWet: 40,
+                filterType: 'lowpass',
+                filterFreq: 1000,
+                filterQ: 1,
+                filterGain: 0
+            },
+            ethereal: {
+                attack: 70,
+                decay: 150,
+                sustain: 60,
+                release: 200,
+                reverbDecay: 300,
+                reverbPredelay: 20,
+                reverbWet: 80,
+                delayTime: 200,
+                delayFeedback: 40,
+                delayWet: 30,
+                filterType: 'lowpass',
+                filterFreq: 500,
+                filterQ: 2,
+                filterGain: 0
+            },
+            shimmer: {
+                attack: 40,
+                decay: 200,
+                sustain: 80,
+                release: 300,
+                reverbDecay: 400,
+                reverbPredelay: 30,
+                reverbWet: 90,
+                delayTime: 250,
+                delayFeedback: 60,
+                delayWet: 50,
+                filterType: 'highpass',
+                filterFreq: 800,
+                filterQ: 3,
+                filterGain: 4
+            },
+            vintage: {
+                attack: 5,
+                decay: 100,
+                sustain: 50,
+                release: 80,
+                reverbDecay: 150,
+                reverbPredelay: 5,
+                reverbWet: 30,
+                delayTime: 100,
+                delayFeedback: 20,
+                delayWet: 20,
+                filterType: 'lowpass',
+                filterFreq: 2000,
+                filterQ: 4,
+                filterGain: 2
+            },
+            space: {
+                attack: 100,
+                decay: 300,
+                sustain: 90,
+                release: 400,
+                reverbDecay: 450,
+                reverbPredelay: 40,
+                reverbWet: 95,
+                delayTime: 300,
+                delayFeedback: 70,
+                delayWet: 60,
+                filterType: 'bandpass',
+                filterFreq: 1500,
+                filterQ: 2,
+                filterGain: 3
+            },
+            pluck: {
+                attack: 1,
+                decay: 30,
+                sustain: 20,
+                release: 50,
+                reverbDecay: 100,
+                reverbPredelay: 5,
+                reverbWet: 40,
+                delayTime: 180,
+                delayFeedback: 45,
+                delayWet: 35,
+                filterType: 'peaking',
+                filterFreq: 3000,
+                filterQ: 5,
+                filterGain: 6
+            }
+        };
+
+        function applyPreset(preset) {
+            document.querySelectorAll('.preset-btn').forEach(btn => 
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(preset)));
+            
+            const settings = PRESETS[preset];
+            if (!settings) return;
+
+            Object.entries(settings).forEach(([param, value]) => {
+                const element = document.getElementById(param);
+                if (!element) return;
+                
+                element.value = value;
+                
+                if (element.type === 'range') {
+                    updateSliderDisplay(element, value);
+                }
+            });
+
+            updateEffectsParameters();
+        }
     </script>
 </body>
 </html>
