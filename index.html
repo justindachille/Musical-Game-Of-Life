@@ -10,9 +10,17 @@
             padding: 20px;
             background-color: #f0f0f0;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             min-height: 100vh;
+            gap: 0px;
+        }
+
+        .content-wrapper {
+            display: flex;
+            justify-content: center;
             gap: 20px;
+            width: 100%;
         }
 
         .controls-panel {
@@ -226,196 +234,230 @@
             color: white;
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
         }
+
+        .footer {
+            text-align: center;
+            margin-top: 0px;
+            padding: 0px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #2563eb;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: #1d4ed8;
+        }
+
+        .heart {
+            color: #e11d48;
+            display: inline-block;
+            animation: beat 1.5s infinite ease-in-out;
+        }
+
+        @keyframes beat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.2); }
+        }
     </style>
 </head>
 <body>
     <!-- Left Controls Panel -->
-    <div class="controls-panel">
-        <div class="control-group">
-            <h3>ADSR Envelope</h3>
-            <div class="slider-control">
-                <label>Attack <span class="value-display">10ms</span></label>
-                <input type="range" id="attack" min="1" max="100" value="10">
+    <div class="content-wrapper">
+        <div class="controls-panel">
+            <div class="control-group">
+                <h3>ADSR Envelope</h3>
+                <div class="slider-control">
+                    <label>Attack <span class="value-display">10ms</span></label>
+                    <input type="range" id="attack" min="1" max="100" value="10">
+                </div>
+                <div class="slider-control">
+                    <label>Decay <span class="value-display">50ms</span></label>
+                    <input type="range" id="decay" min="1" max="200" value="50">
+                </div>
+                <div class="slider-control">
+                    <label>Sustain <span class="value-display">70%</span></label>
+                    <input type="range" id="sustain" min="0" max="100" value="70">
+                </div>
+                <div class="slider-control">
+                    <label>Release <span class="value-display">100ms</span></label>
+                    <input type="range" id="release" min="1" max="500" value="100">
+                </div>
             </div>
-            <div class="slider-control">
-                <label>Decay <span class="value-display">50ms</span></label>
-                <input type="range" id="decay" min="1" max="200" value="50">
+
+            <div class="control-group">
+                <h3>Reverb</h3>
+                <div class="slider-control">
+                    <label>Decay Time <span class="value-display">2.0s</span></label>
+                    <input type="range" id="reverbDecay" min="0" max="500" value="200">
+                </div>
+                <div class="slider-control">
+                    <label>Pre-Delay <span class="value-display">10ms</span></label>
+                    <input type="range" id="reverbPredelay" min="0" max="100" value="10">
+                </div>
+                <div class="slider-control">
+                    <label>Wet Mix <span class="value-display">50%</span></label>
+                    <input type="range" id="reverbWet" min="0" max="100" value="50">
+                </div>
             </div>
-            <div class="slider-control">
-                <label>Sustain <span class="value-display">70%</span></label>
-                <input type="range" id="sustain" min="0" max="100" value="70">
-            </div>
-            <div class="slider-control">
-                <label>Release <span class="value-display">100ms</span></label>
-                <input type="range" id="release" min="1" max="500" value="100">
+
+            <div class="control-group">
+                <h3>Delay</h3>
+                <div class="slider-control">
+                    <label>Time <span class="value-display">150ms</span></label>
+                    <input type="range" id="delayTime" min="0" max="500" value="150">
+                </div>
+                <div class="slider-control">
+                    <label>Feedback <span class="value-display">30%</span></label>
+                    <input type="range" id="delayFeedback" min="0" max="90" value="30">
+                </div>
+                <div class="slider-control">
+                    <label>Wet Mix <span class="value-display">40%</span></label>
+                    <input type="range" id="delayWet" min="0" max="100" value="40">
+                </div>
             </div>
         </div>
 
-        <div class="control-group">
-            <h3>Reverb</h3>
-            <div class="slider-control">
-                <label>Decay Time <span class="value-display">2.0s</span></label>
-                <input type="range" id="reverbDecay" min="0" max="500" value="200">
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="disclaimer">Note: Audio works best without clipping in Safari</div>
+            <h1>Musical Game of Life</h1>
+            <div class="top-controls">
+                <select id="rootNote">
+                    <option value="C">C</option>
+                    <option value="C#">C#</option>
+                    <option value="D" selected="selected">D</option>
+                    <option value="D#">D#</option>
+                    <option value="E">E</option>
+                    <option value="F">F</option>
+                    <option value="F#">F#</option>
+                    <option value="G">G</option>
+                    <option value="G#">G#</option>
+                    <option value="A">A</option>
+                    <option value="A#">A#</option>
+                    <option value="B">B</option>
+                </select>
+                <select id="scaleType">
+                    <option value="major">Major Scale</option>
+                    <option value="minor">Minor Scale</option>
+                    <option value="harmonicMinor">Harmonic Minor Scale</option>
+                    <option value="melodicMinor">Melodic Minor Scale</option>
+                    <option value="major7">Major 7 Chord</option>
+                    <option value="minor7">Minor 7 Chord</option>
+                    <option value="dominant">Dominant 7 Chord</option>
+                    <option value="pentatonicMajor">Major Pentatonic Scale</option>
+                    <option value="pentatonicMinor" selected="selected">Minor Pentatonic Scale</option>
+                    <option value="blues">Blues Scale</option>
+                    <option value="wholeTone">Whole Tone Scale</option>
+                    <option value="diminished">Diminished Scale</option>
+                    <option value="augmented">Augmented Scale</option>
+                    <option value="chromatic">Chromatic Scale</option>
+                    <option value="phrygian">Phrygian Mode</option>
+                    <option value="lydian">Lydian Mode</option>
+                    <option value="mixolydian">Mixolydian Mode</option>
+                    <option value="dorian">Dorian Mode</option>
+                    <option value="locrian">Locrian Mode</option>
+                    <option value="hungarianMinor">Hungarian Minor Scale</option>
+                    <option value="gypsy">Gypsy Scale</option>
+                    <option value="japanese">Japanese (In Sen) Scale</option>
+                    <option value="arabic">Arabic Scale</option>
+                    <option value="byzantine">Byzantine Scale</option>
+                    <option value="neapolitanMajor">Neapolitan Major Scale</option>
+                    <option value="neapolitanMinor">Neapolitan Minor Scale</option>
+                    <option value="hindu">Hindu Scale</option>
+                    <option value="chinese">Chinese Scale</option>
+                    <option value="persian">Persian Scale</option>
+                    <option value="flamenco">Flamenco Scale</option>
+                    <option value="superLocrian">Super Locrian Scale</option>
+                    <option value="bebopMajor">Bebop Major Scale</option>
+                    <option value="bebopMinor">Bebop Minor Scale</option>
+                    <option value="bebopDominant">Bebop Dominant Scale</option>
+                    <option value="enigmatic">Enigmatic Scale</option>
+                    <option value="hexatonic">Hexatonic Scale</option>
+                </select>
+                <button id="playButton">▶ Play</button>
+                <button id="resetButton">↺ Reset</button>
+                <button id="clearButton">✕ Clear</button>
             </div>
-            <div class="slider-control">
-                <label>Pre-Delay <span class="value-display">10ms</span></label>
-                <input type="range" id="reverbPredelay" min="0" max="100" value="10">
-            </div>
-            <div class="slider-control">
-                <label>Wet Mix <span class="value-display">50%</span></label>
-                <input type="range" id="reverbWet" min="0" max="100" value="50">
+            <div id="grid" class="grid"></div>
+            <div class="presets-container">
+                <div class="presets-title">SOUND PRESETS</div>
+                <div class="presets-grid">
+                    <button class="preset-btn active" onclick="applyPreset('default')">Default</button>
+                    <button class="preset-btn" onclick="applyPreset('ethereal')">Ethereal Pad</button>
+                    <button class="preset-btn" onclick="applyPreset('shimmer')">Shimmer Dreams</button>
+                    <button class="preset-btn" onclick="applyPreset('vintage')">Vintage Synth</button>
+                    <button class="preset-btn" onclick="applyPreset('space')">Deep Space</button>
+                    <button class="preset-btn" onclick="applyPreset('pluck')">Digital Pluck</button>
+                </div>
             </div>
         </div>
 
-        <div class="control-group">
-            <h3>Delay</h3>
-            <div class="slider-control">
-                <label>Time <span class="value-display">150ms</span></label>
-                <input type="range" id="delayTime" min="0" max="500" value="150">
+        <!-- Right Controls Panel -->
+        <div class="controls-panel">
+            <div class="control-group">
+                <h3>Filter</h3>
+                <select id="filterType" class="mb-4 w-full">
+                    <option value="lowpass">Low Pass</option>
+                    <option value="highpass">High Pass</option>
+                    <option value="bandpass">Band Pass</option>
+                    <option value="notch">Notch</option>
+                    <option value="allpass">All Pass</option>
+                    <option value="peaking">Peaking</option>
+                </select>
+                <div class="slider-control">
+                    <label>Frequency <span class="value-display">1000Hz</span></label>
+                    <input type="range" id="filterFreq" min="20" max="20000" value="1000" step="1">
+                </div>
+                <div class="slider-control">
+                    <label>Resonance (Q) <span class="value-display">1.0</span></label>
+                    <input type="range" id="filterQ" min="0.1" max="20" value="1" step="0.1">
+                </div>
+                <div class="slider-control">
+                    <label>Gain (dB) <span class="value-display">0dB</span></label>
+                    <input type="range" id="filterGain" min="-40" max="40" value="0" step="1">
+                </div>
             </div>
-            <div class="slider-control">
-                <label>Feedback <span class="value-display">30%</span></label>
-                <input type="range" id="delayFeedback" min="0" max="90" value="30">
+
+            <div class="control-group">
+                <h3>Compressor</h3>
+                <div class="slider-control">
+                    <label>Threshold <span class="value-display">-24dB</span></label>
+                    <input type="range" id="compThreshold" min="-60" max="0" value="-24">
+                </div>
+                <div class="slider-control">
+                    <label>Ratio <span class="value-display">12:1</span></label>
+                    <input type="range" id="compRatio" min="1" max="20" value="12">
+                </div>
+                <div class="slider-control">
+                    <label>Attack <span class="value-display">10ms</span></label>
+                    <input type="range" id="compAttack" min="0" max="100" value="10">
+                </div>
+                <div class="slider-control">
+                    <label>Release <span class="value-display">250ms</span></label>
+                    <input type="range" id="compRelease" min="0" max="1000" value="250">
+                </div>
             </div>
-            <div class="slider-control">
-                <label>Wet Mix <span class="value-display">40%</span></label>
-                <input type="range" id="delayWet" min="0" max="100" value="40">
+
+            <div class="control-group">
+                <h3>Auto Reset Detection</h3>
+                <div class="slider-control">
+                    <label>Sensitivity <span class="value-display">Medium</span></label>
+                    <input type="range" id="resetSensitivity" min="1" max="5" value="3">
+                </div>
+                <div id="patternStatus">Pattern Status: Normal</div>
+                <button id="changeRootNote" class="on">Change Root Note on Reset: ON</button>
             </div>
         </div>
     </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="disclaimer">Note: Audio works best without clipping in Safari</div>
-        <h1>Musical Game of Life</h1>
-        <div class="top-controls">
-            <select id="rootNote">
-                <option value="C">C</option>
-                <option value="C#">C#</option>
-                <option value="D" selected="selected">D</option>
-                <option value="D#">D#</option>
-                <option value="E">E</option>
-                <option value="F">F</option>
-                <option value="F#">F#</option>
-                <option value="G">G</option>
-                <option value="G#">G#</option>
-                <option value="A">A</option>
-                <option value="A#">A#</option>
-                <option value="B">B</option>
-            </select>
-            <select id="scaleType">
-                <option value="major">Major Scale</option>
-                <option value="minor">Minor Scale</option>
-                <option value="harmonicMinor">Harmonic Minor Scale</option>
-                <option value="melodicMinor">Melodic Minor Scale</option>
-                <option value="major7">Major 7 Chord</option>
-                <option value="minor7">Minor 7 Chord</option>
-                <option value="dominant">Dominant 7 Chord</option>
-                <option value="pentatonicMajor">Major Pentatonic Scale</option>
-                <option value="pentatonicMinor" selected="selected">Minor Pentatonic Scale</option>
-                <option value="blues">Blues Scale</option>
-                <option value="wholeTone">Whole Tone Scale</option>
-                <option value="diminished">Diminished Scale</option>
-                <option value="augmented">Augmented Scale</option>
-                <option value="chromatic">Chromatic Scale</option>
-                <option value="phrygian">Phrygian Mode</option>
-                <option value="lydian">Lydian Mode</option>
-                <option value="mixolydian">Mixolydian Mode</option>
-                <option value="dorian">Dorian Mode</option>
-                <option value="locrian">Locrian Mode</option>
-                <option value="hungarianMinor">Hungarian Minor Scale</option>
-                <option value="gypsy">Gypsy Scale</option>
-                <option value="japanese">Japanese (In Sen) Scale</option>
-                <option value="arabic">Arabic Scale</option>
-                <option value="byzantine">Byzantine Scale</option>
-                <option value="neapolitanMajor">Neapolitan Major Scale</option>
-                <option value="neapolitanMinor">Neapolitan Minor Scale</option>
-                <option value="hindu">Hindu Scale</option>
-                <option value="chinese">Chinese Scale</option>
-                <option value="persian">Persian Scale</option>
-                <option value="flamenco">Flamenco Scale</option>
-                <option value="superLocrian">Super Locrian Scale</option>
-                <option value="bebopMajor">Bebop Major Scale</option>
-                <option value="bebopMinor">Bebop Minor Scale</option>
-                <option value="bebopDominant">Bebop Dominant Scale</option>
-                <option value="enigmatic">Enigmatic Scale</option>
-                <option value="hexatonic">Hexatonic Scale</option>
-            </select>
-            <button id="playButton">▶ Play</button>
-            <button id="resetButton">↺ Reset</button>
-            <button id="clearButton">✕ Clear</button>
-        </div>
-        <div id="grid" class="grid"></div>
-        <div class="presets-container">
-            <div class="presets-title">SOUND PRESETS</div>
-            <div class="presets-grid">
-                <button class="preset-btn active" onclick="applyPreset('default')">Default</button>
-                <button class="preset-btn" onclick="applyPreset('ethereal')">Ethereal Pad</button>
-                <button class="preset-btn" onclick="applyPreset('shimmer')">Shimmer Dreams</button>
-                <button class="preset-btn" onclick="applyPreset('vintage')">Vintage Synth</button>
-                <button class="preset-btn" onclick="applyPreset('space')">Deep Space</button>
-                <button class="preset-btn" onclick="applyPreset('pluck')">Digital Pluck</button>
-            </div>
-        </div>
+    
+    <div class="footer">
+        Made with <span class="heart">♥</span> by Justin Dachille | <a href="https://github.com/justindachille/musical-game-of-life" target="_blank">View on GitHub</a>
     </div>
-
-    <!-- Right Controls Panel -->
-    <div class="controls-panel">
-        <div class="control-group">
-            <h3>Filter</h3>
-            <select id="filterType" class="mb-4 w-full">
-                <option value="lowpass">Low Pass</option>
-                <option value="highpass">High Pass</option>
-                <option value="bandpass">Band Pass</option>
-                <option value="notch">Notch</option>
-                <option value="allpass">All Pass</option>
-                <option value="peaking">Peaking</option>
-            </select>
-            <div class="slider-control">
-                <label>Frequency <span class="value-display">1000Hz</span></label>
-                <input type="range" id="filterFreq" min="20" max="20000" value="1000" step="1">
-            </div>
-            <div class="slider-control">
-                <label>Resonance (Q) <span class="value-display">1.0</span></label>
-                <input type="range" id="filterQ" min="0.1" max="20" value="1" step="0.1">
-            </div>
-            <div class="slider-control">
-                <label>Gain (dB) <span class="value-display">0dB</span></label>
-                <input type="range" id="filterGain" min="-40" max="40" value="0" step="1">
-            </div>
-        </div>
-
-        <div class="control-group">
-            <h3>Compressor</h3>
-            <div class="slider-control">
-                <label>Threshold <span class="value-display">-24dB</span></label>
-                <input type="range" id="compThreshold" min="-60" max="0" value="-24">
-            </div>
-            <div class="slider-control">
-                <label>Ratio <span class="value-display">12:1</span></label>
-                <input type="range" id="compRatio" min="1" max="20" value="12">
-            </div>
-            <div class="slider-control">
-                <label>Attack <span class="value-display">10ms</span></label>
-                <input type="range" id="compAttack" min="0" max="100" value="10">
-            </div>
-            <div class="slider-control">
-                <label>Release <span class="value-display">250ms</span></label>
-                <input type="range" id="compRelease" min="0" max="1000" value="250">
-            </div>
-        </div>
-
-        <div class="control-group">
-            <h3>Auto Reset Detection</h3>
-            <div class="slider-control">
-                <label>Sensitivity <span class="value-display">Medium</span></label>
-                <input type="range" id="resetSensitivity" min="1" max="5" value="3">
-            </div>
-            <div id="patternStatus">Pattern Status: Normal</div>
-            <button id="changeRootNote" class="on">Change Root Note on Reset: ON</button>
-        </div>
-    </div>
-
     <script>
         // Constants and State
         const GRID_SIZE = 20;
