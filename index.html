@@ -189,7 +189,17 @@
             color: white;
         }
 
+        .presets-wrapper {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
         .presets-container {
+            flex: 1;
             margin: 20px auto;
             padding: 16px 24px;
             background: white;
@@ -351,6 +361,20 @@
                     <option value="dominant">Dominant 7 Chord</option>
                     <option value="pentatonicMajor">Major Pentatonic Scale</option>
                     <option value="pentatonicMinor" selected="selected">Minor Pentatonic Scale</option>
+                    <option value="maj9">Major 9th</option>
+                    <option value="min9">Minor 9th</option>
+                    <option value="dom9">Dominant 9th</option>
+                    <option value="maj11">Major 11th</option>
+                    <option value="min11">Minor 11th</option>
+                    <option value="dom11">Dominant 11th</option>
+                    <option value="maj13">Major 13th</option>
+                    <option value="min13">Minor 13th</option>
+                    <option value="dom13">Dominant 13th</option>
+                    <option value="sus2">Suspended 2nd</option>
+                    <option value="sus4">Suspended 4th</option>
+                    <option value="aug7">Augmented 7th</option>
+                    <option value="dim7">Diminished 7th</option>
+                    <option value="halfDim7">Half-Diminished 7th</option>
                     <option value="blues">Blues Scale</option>
                     <option value="wholeTone">Whole Tone Scale</option>
                     <option value="diminished">Diminished Scale</option>
@@ -384,15 +408,29 @@
                 <button id="clearButton">✕ Clear</button>
             </div>
             <div id="grid" class="grid"></div>
-            <div class="presets-container">
-                <div class="presets-title">SOUND PRESETS</div>
-                <div class="presets-grid">
-                    <button class="preset-btn active" onclick="applyPreset('default')">Default</button>
-                    <button class="preset-btn" onclick="applyPreset('ethereal')">Ethereal Pad</button>
-                    <button class="preset-btn" onclick="applyPreset('shimmer')">Shimmer Dreams</button>
-                    <button class="preset-btn" onclick="applyPreset('vintage')">Vintage Synth</button>
-                    <button class="preset-btn" onclick="applyPreset('space')">Deep Space</button>
-                    <button class="preset-btn" onclick="applyPreset('pluck')">Digital Pluck</button>
+            <div class="presets-wrapper">
+                <div class="presets-container">
+                    <div class="presets-title">SOUND PRESETS</div>
+                    <div class="presets-grid">
+                        <button class="preset-btn active" onclick="applyPreset('default')">Default</button>
+                        <button class="preset-btn" onclick="applyPreset('ethereal')">Ethereal Pad</button>
+                        <button class="preset-btn" onclick="applyPreset('shimmer')">Shimmer Dreams</button>
+                        <button class="preset-btn" onclick="applyPreset('vintage')">Vintage Synth</button>
+                        <button class="preset-btn" onclick="applyPreset('space')">Deep Space</button>
+                        <button class="preset-btn" onclick="applyPreset('pluck')">Digital Pluck</button>
+                    </div>
+                </div>
+                <div class="presets-container">
+                    <div class="presets-title">GRID PRESETS</div>
+                    <div class="presets-grid">
+                        <button class="preset-btn" onclick="applyGridPreset('glider')">Glider</button>
+                        <button class="preset-btn" onclick="applyGridPreset('blinker')">Blinker</button>
+                        <button class="preset-btn" onclick="applyGridPreset('beacon')">Beacon</button>
+                        <button class="preset-btn" onclick="applyGridPreset('toad')">Toad</button>
+                        <button class="preset-btn" onclick="applyGridPreset('lightweight')">Lightweight Spaceship</button>
+                        <button class="preset-btn" onclick="applyGridPreset('pulsar')">Pulsar</button>
+                        <button class="preset-btn" onclick="addRandomGlider()">Add Random Glider</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -444,6 +482,14 @@
             </div>
 
             <div class="control-group">
+                <h3>Game Speed</h3>
+                <div class="slider-control">
+                    <label>Update Rate <span class="value-display">150ms</span></label>
+                    <input type="range" id="gameSpeed" min="1" max="500" value="150" step="1">
+                </div>
+            </div>
+
+            <div class="control-group">
                 <h3>Auto Reset Detection</h3>
                 <div class="slider-control">
                     <label>Sensitivity <span class="value-display">Medium</span></label>
@@ -467,6 +513,7 @@
         let grid = Array(GRID_SIZE).fill().map(() => Array(GRID_SIZE).fill(false));
         let lastFiveStates = [];
         let patternRepeatCount = 0;
+        let updateRate = 150;
         
         // Audio Nodes
         let reverbNode = null;
@@ -474,14 +521,13 @@
         let filterNode = null;
         let compressorNode = null;
         let effectsChain = new Map();
-        let stereoNodes = new Map(); // For storing stereo panners
+        let stereoNodes = new Map();
 
         function calculatePan(column) {
             const centerColumn = (GRID_SIZE - 1) / 2;
             return (column - centerColumn) / centerColumn;
         }
 
-        // Audio Setup
         class SimpleReverb {
             constructor(context) {
                 this.context = context;
@@ -545,19 +591,16 @@
             masterGain = audioContext.createGain();
             masterGain.connect(audioContext.destination);
 
-            // Initialize effects chain
             reverbNode = new SimpleReverb(audioContext);
             delayNode = createDelayEffect();
             compressorNode = audioContext.createDynamicsCompressor();
             filterNode = audioContext.createBiquadFilter();
             
-            // Set up effects chain
             effectsChain.set('reverb', reverbNode);
             effectsChain.set('delay', delayNode);
             effectsChain.set('filter', filterNode);
             effectsChain.set('compressor', compressorNode);
 
-            // Connect effects chain
             reverbNode.output.connect(delayNode.input);
             delayNode.output.connect(filterNode);
             filterNode.connect(compressorNode);
@@ -636,13 +679,11 @@
         function updateEffectsParameters() {
             if (!audioContext) return;
 
-            // Update Reverb
             const reverbDecay = parseFloat(document.getElementById('reverbDecay').value) / 100;
             const reverbWet = parseFloat(document.getElementById('reverbWet').value) / 100;
             reverbNode.setDecayTime(reverbDecay);
             reverbNode.setWetLevel(reverbWet);
 
-            // Update Delay
             const delayTime = parseFloat(document.getElementById('delayTime').value) / 1000;
             const delayFeedback = parseFloat(document.getElementById('delayFeedback').value) / 100;
             const delayWet = parseFloat(document.getElementById('delayWet').value) / 100;
@@ -651,7 +692,6 @@
             delayNode.wetGain.gain.setValueAtTime(delayWet, audioContext.currentTime);
             delayNode.dryGain.gain.setValueAtTime(1 - delayWet, audioContext.currentTime);
 
-            // Update Compressor
             const threshold = parseFloat(document.getElementById('compThreshold').value);
             const ratio = parseFloat(document.getElementById('compRatio').value);
             const attack = parseFloat(document.getElementById('compAttack').value) / 1000;
@@ -680,19 +720,16 @@
             const source = audioContext.createBufferSource();
             source.buffer = createToneBuffer(frequency, 0.2);
             
-            // Create stereo panner
             const stereoPanner = audioContext.createStereoPanner();
             const panValue = calculatePan(column);
             stereoPanner.pan.setValueAtTime(panValue, audioContext.currentTime);
             
-            // Connect through stereo panner
             source.connect(stereoPanner);
             stereoPanner.connect(reverbNode.input);
             
             source.start();
             source.stop(audioContext.currentTime + 0.2);
 
-            // Cleanup
             source.onended = () => {
                 source.disconnect();
                 stereoPanner.disconnect();
@@ -703,7 +740,7 @@
         function updateSliderDisplay(slider, value) {
             const display = slider.parentElement.querySelector('.value-display');
             const unit = slider.id.includes('Time') || slider.id.includes('Attack') || 
-                        slider.id.includes('Release') || slider.id.includes('Decay') ? 'ms' :
+                        slider.id.includes('Release') || slider.id.includes('Decay') || slider.id.includes('Speed') ? 'ms' :
                         slider.id.includes('Threshold') || slider.id.includes('filterGain') ? 'dB' :
                         slider.id.includes('Ratio') ? ':1' :
                         slider.id.includes('filterFreq') ? 'Hz' :
@@ -730,7 +767,6 @@
 
         document.getElementById('filterType').addEventListener('change', updateEffectsParameters);
 
-        // Pattern Detection
         function checkForPatternRepetition() {
             const currentState = grid.map(row => [...row]);
             lastFiveStates.push(JSON.stringify(currentState));
@@ -763,12 +799,10 @@
             }
         }
 
-        // Initialize controls
         document.querySelectorAll('input[type="range"]').forEach(slider => {
             updateSliderDisplay(slider, slider.value);
         });
 
-        // Grid initialization and game logic
         function generateScale() {
             const rootNote = document.getElementById('rootNote').value;
             const scaleType = document.getElementById('scaleType').value;
@@ -782,6 +816,20 @@
                 dominant: [0, 4, 7, 10], // Dominant 7th chord
                 pentatonicMajor: [0, 2, 4, 7, 9], // Major pentatonic scale
                 pentatonicMinor: [0, 3, 5, 7, 10], // Minor pentatonic scale
+                maj9: [0, 4, 7, 11, 14], // Major 9th
+                min9: [0, 3, 7, 10, 14], // Minor 9th
+                dom9: [0, 4, 7, 10, 14], // Dominant 9th
+                maj11: [0, 4, 7, 11, 14, 17], // Major 11th
+                min11: [0, 3, 7, 10, 14, 17], // Minor 11th
+                dom11: [0, 4, 7, 10, 14, 17], // Dominant 11th
+                maj13: [0, 4, 7, 11, 14, 17, 21], // Major 13th
+                min13: [0, 3, 7, 10, 14, 17, 21], // Minor 13th
+                dom13: [0, 4, 7, 10, 14, 17, 21], // Dominant 13th
+                sus2: [0, 2, 7], // Suspended 2nd
+                sus4: [0, 5, 7], // Suspended 4th
+                aug7: [0, 4, 8, 10], // Augmented 7th
+                dim7: [0, 3, 6, 9], // Diminished 7th
+                halfDim7: [0, 3, 6, 10], // Half-diminished 7th
                 blues: [0, 3, 5, 6, 7, 10], // Blues scale
                 wholeTone: [0, 2, 4, 6, 8, 10], // Whole tone scale
                 diminished: [0, 2, 3, 5, 6, 8, 9, 11], // Diminished scale (half-whole)
@@ -832,7 +880,6 @@
                 const semitones = interval;
                 const baseNote = rootNote;
                 
-                // Calculate the actual note and octave
                 const ALL_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
                 const baseIndex = ALL_NOTES.indexOf(baseNote);
                 const actualIndex = (baseIndex + semitones) % 12;
@@ -948,11 +995,9 @@
             }
         }
 
-        // Initialize the game
         initGrid();
         randomizeGrid();
 
-        // Main control button event listeners
         let gameInterval;
         document.getElementById('playButton').addEventListener('click', function() {
             if (!audioContext) initAudio();
@@ -961,7 +1006,7 @@
             
             if (isRunning) {
                 audioContext.resume();
-                gameInterval = setInterval(updateGrid, 150);
+                gameInterval = setInterval(updateGrid, updateRate);
             } else {
                 clearInterval(gameInterval);
             }
@@ -975,7 +1020,6 @@
             clearGrid();
         });
 
-        // Initialize scale controls
         document.getElementById('rootNote').addEventListener('change', () => {
             if (audioContext) {
                 soundBuffers.clear();
@@ -1107,6 +1151,122 @@
 
             updateEffectsParameters();
         }
+        function applyGridPreset(preset) {
+            clearGrid();
+            const center = Math.floor(GRID_SIZE / 2) - 1;
+            
+            const patterns = {
+                glider: [
+                    [0, 1, 0],
+                    [0, 0, 1],
+                    [1, 1, 1]
+                ],
+                blinker: [
+                    [0, 1, 0],
+                    [0, 1, 0],
+                    [0, 1, 0]
+                ],
+                beacon: [
+                    [1, 1, 0, 0],
+                    [1, 1, 0, 0],
+                    [0, 0, 1, 1],
+                    [0, 0, 1, 1]
+                ],
+                toad: [
+                    [0, 1, 1, 1],
+                    [1, 1, 1, 0]
+                ],
+                lightweight: [
+                    [1, 0, 0, 1, 0],
+                    [0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 1],
+                    [0, 1, 1, 1, 1]
+                ],
+                pulsar: [
+                    [0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+                    [0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0],
+                    [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+                    [1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0]
+                ]
+            };
+
+            const pattern = patterns[preset];
+            if (!pattern) return;
+
+            const startRow = center - Math.floor(pattern.length / 2);
+            const startCol = center - Math.floor(pattern[0].length / 2);
+
+            for (let i = 0; i < pattern.length; i++) {
+                for (let j = 0; j < pattern[0].length; j++) {
+                    if (startRow + i >= 0 && startRow + i < GRID_SIZE &&
+                        startCol + j >= 0 && startCol + j < GRID_SIZE) {
+                        grid[startRow + i][startCol + j] = pattern[i][j] === 1;
+                    }
+                }
+            }
+            updateGridDisplay();
+        }
+
+        function rotatePattern(pattern) {
+            const rows = pattern.length;
+            const cols = pattern[0].length;
+            const rotated = Array(cols).fill().map(() => Array(rows).fill(0));
+            
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    rotated[j][rows - 1 - i] = pattern[i][j];
+                }
+            }
+            return rotated;
+        }
+
+        function addRandomGlider() {
+            const glider = [
+                [0, 1, 0],
+                [0, 0, 1],
+                [1, 1, 1]
+            ];
+            
+            let rotated = glider;
+            const rotations = Math.floor(Math.random() * 4);
+            for (let i = 0; i < rotations; i++) {
+                rotated = rotatePattern(rotated);
+            }
+            
+            const padding = 3;
+            const row = Math.floor(Math.random() * (GRID_SIZE - padding * 2)) + padding;
+            const col = Math.floor(Math.random() * (GRID_SIZE - padding * 2)) + padding;
+            
+            for (let i = 0; i < rotated.length; i++) {
+                for (let j = 0; j < rotated[0].length; j++) {
+                    if (rotated[i][j] === 1) {
+                        grid[row + i][col + j] = true;
+                    }
+                }
+            }
+            
+            updateGridDisplay();
+        }
+
+        document.getElementById('gameSpeed').addEventListener('input', function() {
+            const speed = parseInt(this.value);
+            updateRate = speed;
+            updateSliderDisplay(this, speed);
+            
+            if (isRunning) {
+                clearInterval(gameInterval);
+                gameInterval = setInterval(updateGrid, updateRate);
+            }
+        });
     </script>
 </body>
 </html>
